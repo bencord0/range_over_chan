@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"sync"
+	"golang.org/x/sync/errgroup"
 )
 
 func arrangeData(from, to int) <-chan int {
@@ -26,26 +26,27 @@ func arrangeData(from, to int) <-chan int {
 }
 
 func merge(channels ...<-chan int) <-chan int {
-	var wg sync.WaitGroup
+	group := new(errgroup.Group)
 	out := make(chan int)
 
-	wg.Add(len(channels))
 	for _, channel := range channels {
-		// For each channel
-		go func(channel <-chan int) {
+		// For each channel, closure over the variables
+		// the `func` passed to `.Go()` cannot take parameters
+		channel := channel
+		group.Go(func() error {
 			// Consume each value
 			for value := range channel {
 				// Forward the value
 				out <- value
 			}
-			// When channel closed, unblock.
-			wg.Done()
-		}(channel)
+
+			return nil
+		})
 	}
 
 	go func() {
 		// All channels are closed
-		wg.Wait()
+		group.Wait()
 		close(out)
 	}()
 

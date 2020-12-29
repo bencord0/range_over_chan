@@ -19,7 +19,8 @@ basic primatives to create a `chan`, pass it around between threads
 and iterate values through `range`.
 
 An easy mistake to make is to forget about the WaitGroup and completely
-break the program. I deadlocked the goroutines this way.
+break the program. I deadlocked the goroutines this way. An errgroup
+offers a better API for this by scoping the wait group within a block.
 
 Interestingly, the rust version is shorter; probably because I didn't
 need to worry about thread synchronisation and the automatically closing
